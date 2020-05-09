@@ -113,7 +113,7 @@ public class PlayerListFragment extends Fragment{
                     t.defaults().size(bs);
 
                     t.addImageButton(Icon.hammer, Styles.clearPartiali,
-                            () -> ui.showConfirm("$confirm", Core.bundle.format("confirmban",  user.name), () -> Call.onAdminRequest(user, AdminAction.ban)));
+                            () -> ui.showConfirm("$confirm", Core.bundle.format("confirmban",  user.name), () -> ui.showConfirm("$confirm", Core.bundle.format("confirmban2",  user.name), () -> Call.onAdminRequest(user, AdminAction.ban))));
                     t.addImageButton(Icon.cancel, Styles.clearPartiali,
                             () -> ui.showConfirm("$confirm", Core.bundle.format("confirmkick",  user.name), () -> Call.onAdminRequest(user, AdminAction.kick)));
 

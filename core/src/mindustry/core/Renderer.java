@@ -230,89 +230,93 @@ public class Renderer implements ApplicationListener{
 
         Draw.proj(camera.projection());
 
-        blocks.floor.drawFloor();
+        if (!ui.minimapfrag.shown()) {
 
-        groundEffectGroup.draw(e -> e instanceof BelowLiquidTrait);
-        puddleGroup.draw();
-        groundEffectGroup.draw(e -> !(e instanceof BelowLiquidTrait));
+            blocks.floor.drawFloor();
 
-        blocks.processBlocks();
+            groundEffectGroup.draw(e -> e instanceof BelowLiquidTrait);
+            puddleGroup.draw();
+            groundEffectGroup.draw(e -> !(e instanceof BelowLiquidTrait));
 
-        blocks.drawShadows();
-        Draw.color();
+            blocks.processBlocks();
 
-        blocks.floor.beginDraw();
-        blocks.floor.drawLayer(CacheLayer.walls);
-        blocks.floor.endDraw();
+            blocks.drawShadows();
+            Draw.color();
 
-        blocks.drawBlocks(Layer.block);
-        blocks.drawFog();
+            blocks.floor.beginDraw();
+            blocks.floor.drawLayer(CacheLayer.walls);
+            blocks.floor.endDraw();
 
-        blocks.drawDestroyed();
+            blocks.drawBlocks(Layer.block);
+            blocks.drawFog();
 
-        Draw.shader(Shaders.blockbuild, true);
-        blocks.drawBlocks(Layer.placement);
-        Draw.shader();
+            blocks.drawDestroyed();
 
-        blocks.drawBlocks(Layer.overlay);
+            Draw.shader(Shaders.blockbuild, true);
+            blocks.drawBlocks(Layer.placement);
+            Draw.shader();
 
-        drawGroundShadows();
+            blocks.drawBlocks(Layer.overlay);
 
-        drawAllTeams(false);
+            drawGroundShadows();
 
-        blocks.drawBlocks(Layer.turret);
+            drawAllTeams(false);
 
-        drawFlyerShadows();
+            blocks.drawBlocks(Layer.turret);
 
-        blocks.drawBlocks(Layer.power);
-        blocks.drawBlocks(Layer.lights);
+            drawFlyerShadows();
 
-        drawAllTeams(true);
+            blocks.drawBlocks(Layer.power);
+            blocks.drawBlocks(Layer.lights);
 
-        Draw.flush();
-        if(bloom != null){
-            bloom.capture();
-        }
+            drawAllTeams(true);
 
-        bulletGroup.draw();
-        effectGroup.draw();
-
-        Draw.flush();
-        if(bloom != null){
-            bloom.render();
-        }
-
-        overlays.drawBottom();
-        playerGroup.draw(p -> p.isLocal, Player::drawBuildRequests);
-
-        if(shieldGroup.countInBounds() > 0){
-            if(settings.getBool("animatedshields") && Shaders.shield != null){
-                Draw.flush();
-                shieldBuffer.begin();
-                graphics.clear(Color.clear);
-                shieldGroup.draw();
-                shieldGroup.draw(shield -> true, ShieldEntity::drawOver);
-                Draw.flush();
-                shieldBuffer.end();
-                Draw.shader(Shaders.shield);
-                Draw.color(Pal.accent);
-                Draw.rect(Draw.wrap(shieldBuffer.getTexture()), camera.position.x, camera.position.y, camera.width, -camera.height);
-                Draw.color();
-                Draw.shader();
-            }else{
-                shieldGroup.draw(shield -> true, ShieldEntity::drawSimple);
+            Draw.flush();
+            if (bloom != null) {
+                bloom.capture();
             }
+
+            bulletGroup.draw();
+            effectGroup.draw();
+
+            Draw.flush();
+            if (bloom != null) {
+                bloom.render();
+            }
+
+            overlays.drawBottom();
+            playerGroup.draw(p -> p.isLocal, Player::drawBuildRequests);
+
+            if (shieldGroup.countInBounds() > 0) {
+                if (settings.getBool("animatedshields") && Shaders.shield != null) {
+                    Draw.flush();
+                    shieldBuffer.begin();
+                    graphics.clear(Color.clear);
+                    shieldGroup.draw();
+                    shieldGroup.draw(shield -> true, ShieldEntity::drawOver);
+                    Draw.flush();
+                    shieldBuffer.end();
+                    Draw.shader(Shaders.shield);
+                    Draw.color(Pal.accent);
+                    Draw.rect(Draw.wrap(shieldBuffer.getTexture()), camera.position.x, camera.position.y, camera.width, -camera.height);
+                    Draw.color();
+                    Draw.shader();
+                } else {
+                    shieldGroup.draw(shield -> true, ShieldEntity::drawSimple);
+                }
+            }
+
+            overlays.drawTop();
+
+            playerGroup.draw(p -> !p.isDead(), Player::drawName);
+
+            if (state.rules.lighting) {
+                lights.draw();
+            }
+
+            drawLanding();
+
         }
-
-        overlays.drawTop();
-
-        playerGroup.draw(p -> !p.isDead(), Player::drawName);
-
-        if(state.rules.lighting){
-            lights.draw();
-        }
-
-        drawLanding();
 
         Draw.color();
         Draw.flush();

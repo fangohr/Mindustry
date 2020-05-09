@@ -47,13 +47,13 @@ public class ScriptConsoleFragment extends Table{
         visible(() -> {
             if(input.keyTap(Binding.console)  && (scene.getKeyboardFocus() == chatfield || scene.getKeyboardFocus() == null)){
                 shown = !shown;
-                if(shown && !open && enableConsole){
+                if(shown && !open && enableConsole && !Vars.net.active()){
                     toggle();
                 }
                 clearChatInput();
             }
 
-            return shown && !Vars.net.active();
+            return shown;
         });
 
         update(() -> {
