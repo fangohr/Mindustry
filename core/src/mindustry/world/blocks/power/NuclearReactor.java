@@ -158,6 +158,11 @@ public class NuclearReactor extends PowerGenerator{
         float fract = entity.productionEfficiency;
         renderer.lights.add(tile.drawx(), tile.drawy(), (90f + Mathf.absin(5, 5f)) * fract, Tmp.c1.set(lightColor).lerp(Color.scarlet, entity.heat), 0.6f * fract);
     }
+	
+	@Override
+    public void drawPlace(int x, int y, int rotation, boolean valid){
+        Drawf.dashCircle(x * tilesize + offset(), y * tilesize + offset(), explosionRadius * (tilesize / 2), Pal.accent);
+    }
 
     @Override
     public void draw(Tile tile){
