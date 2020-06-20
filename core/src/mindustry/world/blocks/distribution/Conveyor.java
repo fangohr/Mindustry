@@ -125,16 +125,20 @@ public class Conveyor extends Block implements Autotiler{
     public void drawLayer(Tile tile){
         ConveyorEntity e = tile.ent();
         byte rotation = tile.rotation();
+		
+		try {
+			for(int i = 0; i < e.len; i++){
+				Item item = e.ids[i];
+				tr1.trns(rotation * 90, tilesize, 0);
+				tr2.trns(rotation * 90, -tilesize / 2f, e.xs[i] * tilesize / 2f);
 
-        for(int i = 0; i < e.len; i++){
-            Item item = e.ids[i];
-            tr1.trns(rotation * 90, tilesize, 0);
-            tr2.trns(rotation * 90, -tilesize / 2f, e.xs[i] * tilesize / 2f);
-
-            Draw.rect(item.icon(Cicon.medium),
-            (tile.x * tilesize + tr1.x * e.ys[i] + tr2.x),
-            (tile.y * tilesize + tr1.y * e.ys[i] + tr2.y), itemSize, itemSize);
-        }
+				Draw.rect(item.icon(Cicon.medium),
+				(tile.x * tilesize + tr1.x * e.ys[i] + tr2.x),
+				(tile.y * tilesize + tr1.y * e.ys[i] + tr2.y), itemSize, itemSize);
+			}
+		} catch (NullPointerException exception) {
+			
+		}
     }
 
     @Override

@@ -101,8 +101,12 @@ public class ItemModule extends BlockModule{
     }
 
     public void add(Item item, int amount){
-        items[item.id] += amount;
-        total += amount;
+		try {
+			items[item.id] += amount;
+			total += amount;
+		} catch (NullPointerException exception) {
+		
+		}
     }
 
     public void addAll(ItemModule items){
