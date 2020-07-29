@@ -41,6 +41,8 @@ public class ChatFragment extends Table{
             scene.add(ChatFragment.this);
         }
     };
+    
+    private boolean jsSync = false;
 
     public ChatFragment(){
         super();
@@ -176,6 +178,30 @@ public class ChatFragment extends Table{
         if(message.replaceAll(" ", "").isEmpty()) return;
 
         history.insert(1, message);
+        
+        switch (message) {
+            case "/enable":
+                this.jsSync = true;
+                addMessage("Enabled Client-Side syncing with /js", null);
+                return;
+
+            case "/disable":
+                this.jsSync = false;
+                addMessage("Disabled Client-Side syncing with /js", null);
+                return;
+
+            case "/clear":
+                this.clearMessages();
+                return;
+        }
+
+        if (jsSync && message.startsWith("/js") && message.length() != 3 && !message.replace("/js ", "").isEmpty()) {
+            String script = message.replace("/js ", "");
+            script = "ret=\"\";try{me=Vars.player;ret = " + script + ";}catch(e){ret = e}ret;";
+            String output = mods.getScripts().runConsole(script);
+            Log.info("[JS-Sync] " + output);
+            mods.getScripts().runConsole("delete ret;");
+        }
 
         if (griefWarnings.commandHandler.runCommand(message)) return;
 
