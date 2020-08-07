@@ -28,6 +28,7 @@ public class SettingsMenuDialog extends SettingsDialog{
     private SettingsTable graphics;
     private SettingsTable game;
     private SettingsTable sound;
+    private SettingsTable antiGrief;
 
     private Table prefs;
     private Table menu;
@@ -67,6 +68,7 @@ public class SettingsMenuDialog extends SettingsDialog{
         game = new SettingsTable();
         graphics = new SettingsTable();
         sound = new SettingsTable();
+        antiGrief = new SettingsTable();
 
         prefs = new Table();
         prefs.top();
@@ -187,11 +189,18 @@ public class SettingsMenuDialog extends SettingsDialog{
         menu.defaults().size(300f, 60f);
         menu.addButton("$settings.game", style, () -> visible(0));
         menu.row();
+
         menu.addButton("$settings.graphics", style, () -> visible(1));
         menu.row();
-        menu.addButton("$settings.sound", style, () -> visible(2));
+
+        menu.addButton("Anti grief", style, () -> visible(2));
         menu.row();
+
+        menu.addButton("$settings.sound", style, () -> visible(3));
+        menu.row();
+
         menu.addButton("$settings.language", style, ui.language::show);
+
         if(!mobile || Core.settings.getBool("keyboard")){
             menu.row();
             menu.addButton("$settings.controls", style, ui.controls::show);
@@ -359,6 +368,91 @@ public class SettingsMenuDialog extends SettingsDialog{
         if(!mobile){
             Core.settings.put("swapdiagonal", false);
         }
+
+        antiGrief.checkPref("joinMessages", griefWarnings.joinMessages, b -> {
+            griefWarnings.joinMessages = b;
+            griefWarnings.saveSettings();
+        });
+
+        antiGrief.checkPref("leaveMessages", griefWarnings.leaveMessages, b -> {
+            griefWarnings.leaveMessages = b;
+            griefWarnings.saveSettings();
+        });
+
+        antiGrief.checkPref("reactorBuildWarning", griefWarnings.reactorBuildWarning, b -> {
+            griefWarnings.reactorBuildWarning = b;
+            griefWarnings.saveSettings();
+        });
+
+        antiGrief.checkPref("reactorOverheatWarning", griefWarnings.reactorOverheatWarning, b -> {
+            griefWarnings.reactorOverheatWarning = b;
+            griefWarnings.saveSettings();
+        });
+
+        antiGrief.checkPref("reactorCloseToCoreWarning", griefWarnings.reactorCloseToCoreWarning, b -> {
+            griefWarnings.reactorCloseToCoreWarning = b;
+            griefWarnings.saveSettings();
+        });
+
+        antiGrief.checkPref("generatorCloseToCoreWarning", griefWarnings.generatorCloseToCoreWarning, b -> {
+            griefWarnings.generatorCloseToCoreWarning = b;
+            griefWarnings.saveSettings();
+        });
+
+        antiGrief.checkPref("explosiveItemTransfer", griefWarnings.explosiveItemTransfer, b -> {
+            griefWarnings.explosiveItemTransfer = b;
+            griefWarnings.saveSettings();
+        });
+
+        antiGrief.checkPref("thoriumToReactorTranser", griefWarnings.thoriumToReactorTranser, b -> {
+            griefWarnings.thoriumToReactorTranser = b;
+            griefWarnings.saveSettings();
+        });
+
+        antiGrief.checkPref("powerSplitLog", griefWarnings.powerSplitLog, b -> {
+            griefWarnings.powerSplitLog = b;
+            griefWarnings.saveSettings();
+        });
+
+        antiGrief.checkPref("tileInfoHud", griefWarnings.tileInfoHud, b -> {
+            griefWarnings.tileInfoHud = b;
+            griefWarnings.saveSettings();
+        });
+
+        antiGrief.checkPref("broadcast", griefWarnings.broadcast, b -> {
+            griefWarnings.broadcast = b;
+            griefWarnings.saveSettings();
+        });
+
+        antiGrief.checkPref("autotrace", griefWarnings.autotrace, b -> {
+            griefWarnings.autotrace = b;
+            griefWarnings.saveSettings();
+        });
+
+        antiGrief.checkPref("autoban", griefWarnings.autoban, b -> {
+            griefWarnings.autoban = b;
+            griefWarnings.saveSettings();
+        });
+
+        antiGrief.checkPref("logActions", griefWarnings.logActions, b -> {
+            griefWarnings.logActions = b;
+            griefWarnings.saveSettings();
+        });
+
+        antiGrief.checkPref("oversizeMessageWarning", griefWarnings.oversizeMessageWarning, b -> {
+            griefWarnings.oversizeMessageWarning = b;
+            griefWarnings.saveSettings();
+        });
+
+        antiGrief.checkPref("verbose", griefWarnings.verbose, b -> {
+            griefWarnings.verbose = b;
+            griefWarnings.saveSettings();
+        });
+
+        antiGrief.checkPref("debug", griefWarnings.debug, b -> {
+            griefWarnings.debug = b;
+            griefWarnings.saveSettings();
+        });
     }
 
     private void back(){
@@ -369,7 +463,7 @@ public class SettingsMenuDialog extends SettingsDialog{
 
     private void visible(int index){
         prefs.clearChildren();
-        prefs.add(new Table[]{game, graphics, sound}[index]);
+        prefs.add(new Table[]{game, graphics, antiGrief, sound}[index]);
     }
 
     @Override

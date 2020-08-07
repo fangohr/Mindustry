@@ -57,6 +57,22 @@ public class GriefWarnings {
     /** whether to log every action captured by the action log */
     public boolean logActions = false;
 
+    public boolean joinMessages = true;
+    public boolean leaveMessages = true;
+
+    public boolean reactorBuildWarning = true;
+    public boolean reactorCloseToCoreWarning = true;
+    public boolean reactorOverheatWarning = true;
+
+    public boolean generatorCloseToCoreWarning = true;
+
+    public boolean explosiveItemTransfer = true;
+    public boolean thoriumToReactorTranser = true;
+
+    public boolean powerSplitLog = true;
+
+    public boolean oversizeMessageWarning = false;
+
     public CommandHandler commandHandler = new CommandHandler();
     public FixGrief fixer = new FixGrief();
     public Auto auto;
@@ -74,41 +90,87 @@ public class GriefWarnings {
 
     public void loadSettings() {
         broadcast = Core.settings.getBool("griefwarnings.broadcast", false);
+
         verbose = Core.settings.getBool("griefwarnings.verbose", false);
         debug = Core.settings.getBool("griefwarnings.debug", false);
-        tileInfoHud = Core.settings.getBool("griefwarnings.tileinfohud", true);
+
+        tileInfoHud = Core.settings.getBool("griefwarnings.tileInfoHud", true);
         autoban = Core.settings.getBool("griefwarnings.autoban", false);
         autotrace = Core.settings.getBool("griefwarnings.autotrace", true);
-        logActions = Core.settings.getBool("griefwarnings.logactions", false);
+
+        logActions = Core.settings.getBool("griefwarnings.logActions", false);
+
+        joinMessages = Core.settings.getBool("griefwarnings.joinMessages", true);
+        leaveMessages = Core.settings.getBool("griefwarnings.leaveMessages", true);
+
+        reactorBuildWarning = Core.settings.getBool("griefwarnings.reactorBuildWarning", true);
+        reactorCloseToCoreWarning = Core.settings.getBool("griefwarnings.reactorCloseToCoreWarning", true);
+        reactorOverheatWarning = Core.settings.getBool("griefwarnings.reactorOverheatWarning", true);
+
+        generatorCloseToCoreWarning = Core.settings.getBool("griefwarnings.generatorCloseToCoreWarning", true);
+
+        explosiveItemTransfer = Core.settings.getBool("griefwarnings.explosiveItemTransfer", true);
+        thoriumToReactorTranser = Core.settings.getBool("griefwarnings.thoriumToReactorTranser", true);
+
+        powerSplitLog = Core.settings.getBool("griefwarnings.powerSplitLog", true);
+
+        oversizeMessageWarning = Core.settings.getBool("griefwarnings.oversizeMessageWarning", false);
     }
 
     public void saveSettings() {
         Core.settings.put("griefwarnings.broadcast", broadcast);
+
         Core.settings.put("griefwarnings.verbose", verbose);
         Core.settings.put("griefwarnings.debug", debug);
-        Core.settings.put("griefwarnings.tileinfohud", tileInfoHud);
+
+        Core.settings.put("griefwarnings.tileInfoHud", tileInfoHud);
         Core.settings.put("griefwarnings.autoban", autoban);
         Core.settings.put("griefwarnings.autotrace", autotrace);
-        Core.settings.put("griefwarnings.logactions", logActions);
+
+        Core.settings.put("griefwarnings.logActions", logActions);
+
+        Core.settings.put("griefwarnings.joinMessages", joinMessages);
+        Core.settings.put("griefwarnings.leaveMessages", leaveMessages);
+
+        Core.settings.put("griefwarnings.reactorBuildWarning", reactorBuildWarning);
+        Core.settings.put("griefwarnings.reactorCloseToCoreWarning", reactorCloseToCoreWarning);
+        Core.settings.put("griefwarnings.reactorOverheatWarning", reactorOverheatWarning);
+
+        Core.settings.put("griefwarnings.generatorCloseToCoreWarning", generatorCloseToCoreWarning);
+
+        Core.settings.put("griefwarnings.explosiveItemTransfer", explosiveItemTransfer);
+        Core.settings.put("griefwarnings.thoriumToReactorTranser", thoriumToReactorTranser);
+
+        Core.settings.put("griefwarnings.powerSplitLog", powerSplitLog);
+
+        Core.settings.put("griefwarnings.oversizeMessageWarning", oversizeMessageWarning);
+
         Core.settings.save();
     }
 
     public boolean sendMessage(String message, boolean throttled) {
         // if (!net.active()) return false;
+
         if (message.length() > maxTextLength) {
-            ui.chatfrag.addMessage(
-                    "[scarlet]WARNING: the following grief warning exceeded maximum allowed chat length and was not sent",
-                    null);
-            ui.chatfrag.addMessage(message, null);
-            ui.chatfrag.addMessage("Message length was [accent]" + message.length(), null);
+            if (oversizeMessageWarning) {
+                ui.chatfrag.addMessage("[scarlet]WARNING: the following grief warning exceeded maximum allowed chat length and was not sent", null);
+                ui.chatfrag.addMessage(message, null);
+
+                if (debug) ui.chatfrag.addMessage("Message length was [accent]" + message.length(), null);
+            }
+
             Log.warn("[antigrief] Oversize message not sent (size " + message.length() + "): " + message);
             return false;
         }
+
         if (!Instant.now().isAfter(nextWarningTime) && throttled) return false;
+
         nextWarningTime = Instant.now().plusSeconds(1);
         if (broadcast) Call.sendChatMessage(message);
+
         else if (net.client()) ui.chatfrag.addMessage(message, null);
         else if (net.server()) Log.info("[antigrief] " + message);
+
         return true;
     }
 
@@ -138,6 +200,7 @@ public class GriefWarnings {
         playerStats.clear();
         refs.reset();
         actionLog.reset();
+
         if (auto != null) auto.reset();
     }
 
@@ -147,11 +210,13 @@ public class GriefWarnings {
 
     public TileInfo getOrCreateTileInfo(Tile tile, boolean doLinking) {
         TileInfo info = tile.info;
+
         if (info == null) {
             TileInfo newInfo = new TileInfo();
             info = newInfo;
             tileInfo.put(tile, newInfo);
             tile.info = newInfo;
+
             if (doLinking) tile.getLinkedTiles(linked -> getOrCreateTileInfo(linked, false).doLink(newInfo));
         }
         return info;
@@ -169,13 +234,17 @@ public class GriefWarnings {
             target.stats = stats;
             refs.get(target); // create ref
             if (target == player) return stats;
-            if (player.isAdmin && autotrace) {
-                stats.doTrace(trace -> {
-                    sendLocal("[accent]Player join:[] " + formatPlayer(target) + " " + formatTrace(trace));
-                    Log.infoTag("antigrief", "Player join: " + target.name + " (" + player.id+ ") " + formatTrace(trace));
-                });
-            } else {
-                sendLocal("[accent]Player join:[] " + formatPlayer(target));
+
+            if (joinMessages) {
+                if (player.isAdmin && autotrace) {
+                    stats.doTrace(trace -> {
+                        sendLocal("[accent]Player join:[] " + formatPlayer(target) + " " + formatTrace(trace));
+                        Log.infoTag("antigrief", "Player join: " + target.name + " (" + player.id+ ") " + formatTrace(trace));
+                    });
+
+                } else {
+                    sendLocal("[accent]Player join:[] " + formatPlayer(target));
+                }
             }
         }
         return stats;
@@ -202,19 +271,18 @@ public class GriefWarnings {
 
         boolean didWarn = false;
         float coreDistance = getDistanceToCore(builder, tile);
+
         // persistent warnings that keep showing
-        if (coreDistance < 30 && cblock instanceof NuclearReactor) {
-            String message = "[scarlet]WARNING[] " + formatPlayer(builder) + " is building a reactor [stat]" +
-                    Math.round(coreDistance) + "[] blocks from core. [stat]" + Math.round(progress * 100) + "%";
+        if (coreDistance < 30 && cblock instanceof NuclearReactor && reactorCloseToCoreWarning) {
+            String message = "[scarlet]WARNING[] " + formatPlayer(builder) + " is building a reactor [stat]" + Math.round(coreDistance) + "[] blocks from core. [stat]" + Math.round(progress * 100) + "%";
             sendMessage(message);
             didWarn = true;
-        } else if (coreDistance < 10 && cblock instanceof ItemLiquidGenerator) {
-            String message = "[scarlet]WARNING[] " + formatPlayer(builder) + " is building a generator [stat]" +
-                    Math.round(coreDistance) + "[] blocks from core. [stat]" + Math.round(progress * 100) + "%";
+
+        } else if (coreDistance < 10 && cblock instanceof ItemLiquidGenerator && generatorCloseToCoreWarning) {
+            String message = "[scarlet]WARNING[] " + formatPlayer(builder) + " is building a generator [stat]" + Math.round(coreDistance) + "[] blocks from core. [stat]" + Math.round(progress * 100) + "%";
             sendMessage(message);
             didWarn = true;
         }
-        
 
         // one-time block construction warnings
         if (!info.constructSeen) {
@@ -243,9 +311,8 @@ public class GriefWarnings {
                             break;
                         }
                     }
-                    if (!hasCryo) {
-                        String message = "[lightgray]Notice[] " + formatPlayer(builder) + 
-                            " is building a reactor at " + formatTile(tile);
+                    if (!hasCryo && reactorBuildWarning) {
+                        String message = "[lightgray]Notice[] " + formatPlayer(builder) + " is building a reactor at " + formatTile(tile);
                         sendMessage(message, false);
                     }
                 }
@@ -275,8 +342,7 @@ public class GriefWarnings {
             stats.blocksConstructed++;
 
             if (debug) {
-                sendMessage("[cyan]Debug[] " + formatPlayer(targetPlayer) + " builds [accent]" +
-                        tile.block().name + "[] at " + formatTile(tile), false);
+                sendMessage("[cyan]Debug[] " + formatPlayer(targetPlayer) + " builds [accent]" + tile.block().name + "[] at " + formatTile(tile), false);
             }
         }
     }
@@ -300,7 +366,9 @@ public class GriefWarnings {
         // this runs before the block is actually removed
         TileInfo info = getOrCreateTileInfo(tile);
         Player targetPlayer = playerGroup.getByID(builderId);
+
         if (targetPlayer != null) info.deconstructedBy = targetPlayer;
+
         info.reset();
         tile.getLinkedTiles(linked -> getOrCreateTileInfo(linked, false).unlink());
 
@@ -317,8 +385,7 @@ public class GriefWarnings {
             stats.blocksBroken++;
 
             if (debug) {
-                sendMessage("[cyan]Debug[] " + targetPlayer.name + "[white] ([stat]#" + builderId +
-                        "[]) deconstructs [accent]" + tile.block().name + "[] at " + formatTile(tile), false);
+                sendMessage("[cyan]Debug[] " + targetPlayer.name + "[white] ([stat]#" + builderId + "[]) deconstructs [accent]" + tile.block().name + "[] at " + formatTile(tile), false);
             }
         }
     }
@@ -326,11 +393,14 @@ public class GriefWarnings {
     public Player getNearestPlayerByLocation(float x, float y) {
         // grab every player in a 10x10 area and then find closest
         Array<Player> candidates = playerGroup.intersect(x - 5, y - 5, 10, 10);
+
         if (candidates.size == 0) return null;
         if (candidates.size == 1) return candidates.first();
+
         if (candidates.size > 1) {
             float nearestDistance = Float.MAX_VALUE;
             Player nearestPlayer = null;
+
             for (Player player : candidates) {
                 float distance = Mathf.dst(x, y, player.x, player.y);
                 if (distance < nearestDistance) {
@@ -348,10 +418,11 @@ public class GriefWarnings {
         Tile tile = event.tile;
         Item item = event.item;
         int amount = event.amount;
+
         if (targetPlayer == null) return;
+
         if (verbose) {
-            sendMessage("[green]Verbose[] " + targetPlayer.name + "[white] ([stat]#" + targetPlayer.id +
-                "[]) transfers " + amount + " " + item.name + " to " + tile.block().name + " " + formatTile(tile), false);
+            sendMessage("[green]Verbose[] " + targetPlayer.name + "[white] ([stat]#" + targetPlayer.id + "[]) transfers " + amount + " " + item.name + " to " + tile.block().name + " " + formatTile(tile), false);
         }
 
         Actions.DepositItems action = new Actions.DepositItems(targetPlayer, tile);
@@ -359,24 +430,25 @@ public class GriefWarnings {
         action.amount = amount;
         actionLog.add(action);
 
-        if (item.equals(Items.thorium) && tile.block() instanceof NuclearReactor) {
-            String message = "[scarlet]WARNING[] " + targetPlayer.name + "[white] ([stat]#" +
-                targetPlayer.id + "[]) transfers [accent]" + amount + "[] thorium to a reactor. " + formatTile(tile);
+        if (item.equals(Items.thorium) && tile.block() instanceof NuclearReactor && thoriumToReactorTranser) {
+            String message = "[scarlet]WARNING[] " + targetPlayer.name + "[white] ([stat]#" + targetPlayer.id + "[]) transfers [accent]" + amount + "[] thorium to a reactor. " + formatTile(tile);
             sendMessage(message);
-        } else if (item.explosiveness > 0.5f) {
+
+        } else if (item.explosiveness > 0.5f && explosiveItemTransfer) {
             Block block = tile.block();
+
             if (block instanceof ItemLiquidGenerator) {
-                String message = "[scarlet]WARNING[] " + formatPlayer(targetPlayer) + " transfers [accent]" +
-                    amount + "[] blast to a generator. " + formatTile(tile);
+                String message = "[scarlet]WARNING[] " + formatPlayer(targetPlayer) + " transfers [accent]" + amount + "[] blast to a generator. " + formatTile(tile);
                 sendMessage(message);
+
             } else if (block instanceof Vault) {
-                String message = "[scarlet]WARNING[] " + formatPlayer(targetPlayer) + " transfers [accent]" +
-                        amount + "[] blast to a Vault. " + formatTile(tile);
+                String message = "[scarlet]WARNING[] " + formatPlayer(targetPlayer) + " transfers [accent]" + amount + "[] blast to a Vault. " + formatTile(tile);
                 sendMessage(message);
+
             } else if (block instanceof StorageBlock) {
-                String message = "[scarlet]WARNING[] " + formatPlayer(targetPlayer) + " transfers [accent]" +
-                    amount + "[] blast to a Container. " + formatTile(tile);
+                String message = "[scarlet]WARNING[] " + formatPlayer(targetPlayer) + " transfers [accent]" + amount + "[] blast to a Container. " + formatTile(tile);
                 sendMessage(message);
+
             }
         }
     }
@@ -404,8 +476,11 @@ public class GriefWarnings {
         if (stats != null) {
             stats.gone = true;
             String traceString = "";
-            if (stats.trace != null) traceString = " " + formatTrace(stats.trace);
-            sendLocal("[accent]Player leave:[] " + formatPlayer(targetPlayer) + traceString);
+
+            if (leaveMessages) {
+               if (stats.trace != null) traceString = " " + formatTrace(stats.trace);
+               sendLocal("[accent]Player leave:[] " + formatPlayer(targetPlayer) + traceString);
+            }
         }
     }
 
@@ -460,9 +535,8 @@ public class GriefWarnings {
         int newGraph1Count = newGraph1.all.size;
         int newGraph2Count = newGraph2.all.size;
 
-        if (Math.min(oldGraphCount - newGraph1Count, oldGraphCount - newGraph2Count) > 100) {
-            sendMessage("[lightgray]Notice[] Power split by " + formatPlayer(targetPlayer) + " " + oldGraphCount + " -> " +
-                newGraph1Count + "/" + newGraph2Count + " " + formatTile(tile));
+        if (Math.min(oldGraphCount - newGraph1Count, oldGraphCount - newGraph2Count) > 100 && powerSplitLog) {
+            sendMessage("[lightgray]Notice[] Power split by " + formatPlayer(targetPlayer) + " " + oldGraphCount + " -> " + newGraph1Count + "/" + newGraph2Count + " " + formatTile(tile));
         }
     }
 
@@ -502,7 +576,7 @@ public class GriefWarnings {
             actionLog.add(action);
         }
     }
-    
+
     public void handleRotateBlock(Player targetPlayer, Tile tile, boolean direction) {
         TileInfo info = getOrCreateTileInfo(tile);
         if (targetPlayer != null) {
@@ -536,8 +610,8 @@ public class GriefWarnings {
     }
 
     public void handleThoriumReactorHeat(Tile tile, float heat) {
-        if (heat > 0.15f && tile.interactable(player.getTeam())) {
-            sendMessage("[scarlet]WARNING[] Thorium reactor at " + formatTile(tile) + " is overheating! Heat: [accent]" + heat);
+        if (heat > 0.15f && tile.interactable(player.getTeam()) && reactorOverheatWarning) {
+            sendMessage("[scarlet]WARNING[] Thorium reactor at " + formatTile(tile) + " is overheating! Heat: [accent]" + Mathf.round(heat, 2));
         }
     }
 
@@ -545,7 +619,9 @@ public class GriefWarnings {
         if (player.isAdmin && targetPlayer != null && autoban) {
             Call.onAdminRequest(targetPlayer, AdminAction.ban);
             String message = "[yellow]Autoban[] Banning player " + formatPlayer(targetPlayer);
+
             if (reason != null) message += " (" + reason + ")";
+
             sendMessage(message, false);
             return true;
         } else return false;
@@ -560,6 +636,7 @@ public class GriefWarnings {
     public void handleMessageBlockText(Player targetPlayer, Tile tile, String text) {
         // TODO: maybe log what the text said?
         if (targetPlayer == null) return;
+
         TileInfo info = getOrCreateTileInfo(tile);
         info.logInteraction(targetPlayer);
     }
@@ -572,7 +649,9 @@ public class GriefWarnings {
      */
     public boolean handleTraceResult(Player target, TraceInfo info) {
         PlayerStats stats = playerStats.get(target);
+
         if (stats == null) return false;
+
         boolean requested = stats.autoTraceRequested;
         stats.handleTrace(info);
         return requested;
